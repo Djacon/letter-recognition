@@ -3,6 +3,8 @@ const ctx = canvas.getContext('2d');
 
 let isDraw = false;
 
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 function erase() {
   isDraw = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -159,8 +161,8 @@ function recognize() {
   console.clear();
   let ind = 0;
   let best = 0; 
-  for (let i = 0; i < 10; i++) {
-    console.log(i + '. ' + (Math.round(ans[i] * 1e4) / 100) + '%');
+  for (let i = 0; i < 26; i++) {
+    console.log(alphabet[i] + '. ' + (Math.round(ans[i] * 1e4) / 100) + '%');
     if (best < ans[i]) {
       best = ans[i];
       ind = i;
@@ -168,13 +170,13 @@ function recognize() {
   }
 
   let res = document.getElementById('result');
-  if (best < 0.65) {
+  if (best < 0.55) {
     ind = '¯\\_(ツ)_/¯';
     res.style = 'float:left;font-size:70px;margin-left:40px;';
   } else {
+    ind = alphabet[ind];
     res.style = 'float:left;font-size:200px;margin-left:80px;';
   }
-
   res.innerHTML = ind;
   console.log('Recognize time:', new Date() - t1 + 'ms');
 }
