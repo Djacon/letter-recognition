@@ -178,7 +178,7 @@ function recognize() {
     res.style = 'float:left;font-size:200px;margin-left:80px;';
   }
   res.innerHTML = ind;
-  console.log('Recognize time:', new Date() - t1 + 'ms');
+  console.log('Recognition time:', new Date() - t1 + 'ms');
 }
 
 /////////////////////////////////
