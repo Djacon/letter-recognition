@@ -4,4 +4,4 @@ This is my project with a simple neural network that recognizes handwritten lett
 
 You can test my program right here 👇
 
-Link: https://djacon.github.io/Letter-Recognition/
+Link: https://djacon.github.io/letter-recognition/
