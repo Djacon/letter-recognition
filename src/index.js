@@ -1,42 +1,4 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-
-let isDraw = false;
-
-const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-function erase() {
-  isDraw = false;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-function start(e) {
-  isDraw = true;
-  ctx.beginPath();
-  ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
-  e.preventDefault();
-}
-
-function stop(e) {
-  if (isDraw) {
-    isDraw = false;
-    ctx.stroke();
-    ctx.closePath();
-  }
-  e.preventDefault();
-}
-
-function draw(e) {
-  if (!isDraw) return;
-
-  ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop)
-  ctx.lineWidth = 10;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-}
-
-///////////////////////////////////
+///////////////////////////////////////
 
 function relu(x) {
   return Math.max(0, x);
@@ -73,7 +35,7 @@ function predict(num) {
   return softmax(out);
 }
 
-//////////////////////////////////
+/////////////////////////////////////////
 
 function imageDataToGrayscale(imgData) {
   let grayscaleImg = [];
@@ -147,45 +109,129 @@ function flatten(arr) {
   return new_arr;
 }
 
-//////////////////////////////////
+/////////////////////////////////////
 
-function recognize() {
-  let t1 = new Date();
+const CANVAS_SIZE = 280;
+const CANVAS_SCALE = 1;
 
-  let imgData = imageDataToGrayscale(ctx.getImageData(0, 0, 280, 280));
-  let arr = reduceImage(imgData);
-  let new_arr = centralize(arr);
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const clearButton = document.getElementById('clear-button');
 
-  let ans = predict(flatten(new_arr));
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  console.clear();
-  let ind = 0;
-  let best = 0; 
-  for (let i = 0; i < 26; i++) {
-    console.log(alphabet[i] + '. ' + (Math.round(ans[i] * 1e4) / 100) + '%');
-    if (best < ans[i]) {
-      best = ans[i];
-      ind = i;
-    }
-  }
+let isMouseDown = false;
+let hasIntroText = true;
+let lastX = 0;
+let lastY = 0;
 
-  let res = document.getElementById('result');
-  if (best < 0.55) {
-    ind = '¯\\_(ツ)_/¯';
-    res.style = 'float:left;font-size:70px;margin-left:40px;';
-  } else {
-    ind = alphabet[ind];
-    res.style = 'float:left;font-size:200px;margin-left:80px;';
-  }
-  res.innerHTML = ind;
-  console.log('Recognition time:', new Date() - t1 + 'ms');
+// Add 'Draw a number here!' to the canvas.
+ctx.lineWidth = 28;
+ctx.lineJoin = 'round';
+ctx.font = '28px sans-serif';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillStyle = '#212121';
+ctx.fillText('Loading the model', CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+
+// Set the line color for the canvas.
+ctx.strokeStyle = '#212121';
+
+
+function argsort(arr) {
+  let result = [...Array(arr.length).keys()];
+  result.sort((lhs, rhs) => arr[rhs] - arr[lhs]);
+  return result;
 }
 
-/////////////////////////////////
+function clearCanvas() {
+  ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  for (let i = 0; i < 10; i++) {
+    const element = document.getElementById(`prediction-${i}`);
+    element.className = 'prediction-col';
+    element.children[0].children[0].style.height = '0';
+    element.children[1].textContent = alphabet[i];
+  }
+}
 
-erase();
+function drawLine(fromX, fromY, toX, toY) {
+  // Draws a line from (fromX, fromY) to (toX, toY).
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.closePath();
+  ctx.stroke();
+  updatePredictions();
+}
 
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mousedown', start);
-canvas.addEventListener('mouseup',   stop);
-canvas.addEventListener('mouseout',  stop);
+function updatePredictions() {
+  // Get the predictions for the canvas data.
+  let imgData = imageDataToGrayscale(ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE));
+  let arr = reduceImage(imgData);
+  arr = centralize(arr);
+  let predictions = predict(flatten(arr));
+
+  const bestPredictions = argsort(predictions).slice(0, 10);
+
+  // First column only
+  arg = bestPredictions[0];
+  const element = document.getElementById(`prediction-0`);
+  element.children[0].children[0].style.height = `${predictions[arg] * 100}%`;
+  element.children[1].textContent = alphabet[arg];
+  element.className =
+    predictions[arg] > .4
+      ? 'prediction-col top-prediction'
+      : 'prediction-col';
+
+  for (let i = 1; i < 10; i++) {
+    arg = bestPredictions[i];
+    const element = document.getElementById(`prediction-${i}`);
+    element.children[1].textContent = alphabet[arg];
+    element.children[0].children[0].style.height = `${predictions[arg] * 100}%`;
+  }
+}
+
+//////////////////////////////////////////////////////////////////
+
+function canvasMouseDown(event) {
+  isMouseDown = true;
+  if (hasIntroText) {
+    clearCanvas();
+    hasIntroText = false;
+  }
+  const x = event.offsetX / CANVAS_SCALE;
+  const y = event.offsetY / CANVAS_SCALE;
+  lastX = x + 0.001;
+  lastY = y + 0.001;
+  canvasMouseMove(event);
+}
+
+function canvasMouseMove(event) {
+  const x = event.offsetX / CANVAS_SCALE;
+  const y = event.offsetY / CANVAS_SCALE;
+  if (isMouseDown) {
+    drawLine(lastX, lastY, x, y);
+  }
+  lastX = x;
+  lastY = y;
+}
+
+function bodyMouseUp() {
+  isMouseDown = false;
+}
+
+function bodyMouseOut(event) {
+  if (!event.relatedTarget || event.relatedTarget.nodeName === 'HTML') {
+    isMouseDown = false;
+  }
+}
+
+
+canvas.addEventListener('mousedown', canvasMouseDown);
+canvas.addEventListener('mousemove', canvasMouseMove);
+document.body.addEventListener('mouseup', bodyMouseUp);
+document.body.addEventListener('mouseout', bodyMouseOut);
+clearButton.addEventListener('mousedown', clearCanvas);
+
+ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+ctx.fillText('Draw here!', CANVAS_SIZE / 2, CANVAS_SIZE / 2);
