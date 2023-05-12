@@ -137,7 +137,6 @@ ctx.fillText('Loading the model', CANVAS_SIZE / 2, CANVAS_SIZE / 2);
 // Set the line color for the canvas.
 ctx.strokeStyle = '#212121';
 
-
 function argsort(arr) {
   let result = [...Array(arr.length).keys()];
   result.sort((lhs, rhs) => arr[rhs] - arr[lhs]);
@@ -225,7 +224,6 @@ function bodyMouseOut(event) {
     isMouseDown = false;
   }
 }
-
 
 canvas.addEventListener('mousedown', canvasMouseDown);
 canvas.addEventListener('mousemove', canvasMouseMove);
