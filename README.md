@@ -1,7 +1,8 @@
-# Letter-Recognition
+# Letter Recognition Web App
 
-This is my project with a simple neural network that recognizes handwritten letters. The site and the neural network is written in pure js, so the program produces a prediction quite quickly.
+Welcome to the Letter Recognition Web App!
 
-You can test my program right here 👇
+This project showcases a user-friendly neural network designed to swiftly recognize handwritten digits. The entire application is built using pure JavaScript, ensuring speedy predictions.
 
-Link: https://djacon.github.io/letter-recognition/
+Give it a try right here:\
+🔗 [Letter Recognition Web App](https://djacon.github.io/letter-recognition/)
